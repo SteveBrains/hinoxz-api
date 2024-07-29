@@ -13,12 +13,28 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Post {
+  id               Int       @id @default(autoincrement())
+  title            String
+  description      String?
+  price            String
+  address          String
+  fetchedAddressId Int?
+  fetchedAddress   Location? @relation(fields: [fetchedAddressId], references: [id])
+  latitude         Float
+  longitude        Float
+
+  @@index([latitude, longitude])
+}
+
 model Location {
-  id         Int     @id @default(autoincrement())
-  state      String
-  district   String
-  city       String
-  population Int
-  latitude   Float
-  longitude  Float
+  id        Int    @id @default(autoincrement())
+  state     String
+  district  String
+  city      String
+  latitude  Float
+  longitude Float
+  Post      Post[]
+
+  @@index([latitude, longitude])
 }

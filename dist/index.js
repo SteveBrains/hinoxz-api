@@ -39,12 +39,46 @@ app.get('/locations', (req, res) => __awaiter(void 0, void 0, void 0, function* 
     if (isNaN(lat) || isNaN(lon) || isNaN(rad)) {
         return res.status(400).json({ error: 'Invalid latitude, longitude, or radius' });
     }
-    const locations = yield prisma.location.findMany();
-    const filteredLocations = locations.filter((location) => {
-        const distance = calculateDistance(lat, lon, location.latitude, location.longitude);
-        return distance <= rad;
+    const radInRadians = rad / 6371;
+    //     const query: any = `
+    //                 SELECT *,
+    //                     (6371 * ACOS(COS(RADIANS(${lat}))
+    //                     * COS(RADIANS(latitude))
+    //                     * COS(RADIANS(longitude) - RADIANS(${lon}))
+    //                     + SIN(RADIANS(${lat}))
+    //                     * SIN(RADIANS(latitude)))) AS distance
+    //                 FROM Post
+    //                 HAVING distance <= ${radInRadians}
+    //   `;
+    // const query = await prisma.$queryRaw<{ id: number }[]>(`SELECT id FROM "Post" WHERE ST_DWithin(ST_MakePoint(longitude, latitude), ST_MakePoint(${longitude}, ${latitude})::geography, radius * 1000)` as unknown as TemplateStringsArray | Sql)
+    //   const posts = await prisma.post.findMany({
+    //     where: {
+    //       id: {
+    //         in: query.map(({ id }:any) => id)
+    //       }
+    //     }
+    //   })
+    // res.json(posts)
+    const radiusInMeters = rad * 1000; // Convert radius from kilometers to meters
+    // Query to find posts within the radius using raw SQL
+    const query = yield prisma.$queryRaw `
+  SELECT id 
+  FROM "Post"
+  WHERE ST_DWithin(
+    ST_MakePoint(longitude, latitude)::geography, 
+    ST_MakePoint(${lon}, ${lat})::geography, 
+    ${radiusInMeters}
+  )
+`;
+    // Fetch the posts that match the ids from the first query
+    const posts = yield prisma.post.findMany({
+        where: {
+            id: {
+                in: query.map(({ id }) => id),
+            },
+        },
     });
-    res.json(filteredLocations);
+    res.json(posts);
 }));
 const port = 3000;
 app.listen(port, () => {

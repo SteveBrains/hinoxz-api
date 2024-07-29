@@ -1,7 +1,8 @@
 
 import express from 'express'
 
-import { PrismaClient } from'@prisma/client'
+import { PrismaClient } from '@prisma/client'
+import { Sql } from '@prisma/client/runtime/library';
 const prisma = new PrismaClient();
 
 const app = express();
@@ -18,7 +19,8 @@ const calculateDistance = (lat1: any, lon1: any, lat2: any, lon2: any) => {
         Math.sin(dLon / 2) * Math.sin(dLon / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c;
-}; 
+};
+
 
 app.get('/locations', async (req: any, res: any) => {
     const { latitude, longitude, radius } = req.query;
@@ -35,13 +37,55 @@ app.get('/locations', async (req: any, res: any) => {
         return res.status(400).json({ error: 'Invalid latitude, longitude, or radius' });
     }
 
-    const locations = await prisma.location.findMany();
-    const filteredLocations = locations.filter((location: { latitude: any; longitude: any; }) => {
-        const distance = calculateDistance(lat, lon, location.latitude, location.longitude);
-        return distance <= rad;
-    });
+    const radInRadians = rad / 6371;
 
-    res.json(filteredLocations);
+//     const query: any = `
+//                 SELECT *,
+//                     (6371 * ACOS(COS(RADIANS(${lat}))
+//                     * COS(RADIANS(latitude))
+//                     * COS(RADIANS(longitude) - RADIANS(${lon}))
+//                     + SIN(RADIANS(${lat}))
+//                     * SIN(RADIANS(latitude)))) AS distance
+//                 FROM Post
+//                 HAVING distance <= ${radInRadians}
+//   `;
+
+
+// const query = await prisma.$queryRaw<{ id: number }[]>(`SELECT id FROM "Post" WHERE ST_DWithin(ST_MakePoint(longitude, latitude), ST_MakePoint(${longitude}, ${latitude})::geography, radius * 1000)` as unknown as TemplateStringsArray | Sql)
+//   const posts = await prisma.post.findMany({
+//     where: {
+//       id: {
+//         in: query.map(({ id }:any) => id)
+//       }
+//     }
+//   })
+  
+// res.json(posts)
+const radiusInMeters = rad * 1000; // Convert radius from kilometers to meters
+
+// Query to find posts within the radius using raw SQL
+const query = await prisma.$queryRaw<{ id: number }[]>`
+  SELECT id 
+  FROM "Post"
+  WHERE ST_DWithin(
+    ST_MakePoint(longitude, latitude)::geography, 
+    ST_MakePoint(${lon}, ${lat})::geography, 
+    ${radiusInMeters}
+  )
+`;
+
+// Fetch the posts that match the ids from the first query
+const posts = await prisma.post.findMany({
+  where: {
+    id: {
+      in: query.map(({ id }) => id),
+    },
+  },
+});
+
+res.json(posts);
+
+
 });
 
 const port = 3000;
