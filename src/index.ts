@@ -87,8 +87,6 @@ app.get('/locations', async (req: any, res: any) => {
 
 
 });
-
-
 app.get('/', async (req: any, res: any) => {
     res.json({ message: "Welcome" })
 })
