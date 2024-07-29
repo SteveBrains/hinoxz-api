@@ -80,6 +80,9 @@ app.get('/locations', (req, res) => __awaiter(void 0, void 0, void 0, function* 
     });
     res.json(posts);
 }));
+app.get('/', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    res.json({ message: "Welcome" });
+}));
 const port = 3000;
 app.listen(port, () => {
     console.log(`Server running on port ${port}`);

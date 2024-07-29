@@ -39,32 +39,32 @@ app.get('/locations', async (req: any, res: any) => {
 
     const radInRadians = rad / 6371;
 
-//     const query: any = `
-//                 SELECT *,
-//                     (6371 * ACOS(COS(RADIANS(${lat}))
-//                     * COS(RADIANS(latitude))
-//                     * COS(RADIANS(longitude) - RADIANS(${lon}))
-//                     + SIN(RADIANS(${lat}))
-//                     * SIN(RADIANS(latitude)))) AS distance
-//                 FROM Post
-//                 HAVING distance <= ${radInRadians}
-//   `;
+    //     const query: any = `
+    //                 SELECT *,
+    //                     (6371 * ACOS(COS(RADIANS(${lat}))
+    //                     * COS(RADIANS(latitude))
+    //                     * COS(RADIANS(longitude) - RADIANS(${lon}))
+    //                     + SIN(RADIANS(${lat}))
+    //                     * SIN(RADIANS(latitude)))) AS distance
+    //                 FROM Post
+    //                 HAVING distance <= ${radInRadians}
+    //   `;
 
 
-// const query = await prisma.$queryRaw<{ id: number }[]>(`SELECT id FROM "Post" WHERE ST_DWithin(ST_MakePoint(longitude, latitude), ST_MakePoint(${longitude}, ${latitude})::geography, radius * 1000)` as unknown as TemplateStringsArray | Sql)
-//   const posts = await prisma.post.findMany({
-//     where: {
-//       id: {
-//         in: query.map(({ id }:any) => id)
-//       }
-//     }
-//   })
-  
-// res.json(posts)
-const radiusInMeters = rad * 1000; // Convert radius from kilometers to meters
+    // const query = await prisma.$queryRaw<{ id: number }[]>(`SELECT id FROM "Post" WHERE ST_DWithin(ST_MakePoint(longitude, latitude), ST_MakePoint(${longitude}, ${latitude})::geography, radius * 1000)` as unknown as TemplateStringsArray | Sql)
+    //   const posts = await prisma.post.findMany({
+    //     where: {
+    //       id: {
+    //         in: query.map(({ id }:any) => id)
+    //       }
+    //     }
+    //   })
 
-// Query to find posts within the radius using raw SQL
-const query = await prisma.$queryRaw<{ id: number }[]>`
+    // res.json(posts)
+    const radiusInMeters = rad * 1000; // Convert radius from kilometers to meters
+
+    // Query to find posts within the radius using raw SQL
+    const query = await prisma.$queryRaw<{ id: number }[]>`
   SELECT id 
   FROM "Post"
   WHERE ST_DWithin(
@@ -74,19 +74,24 @@ const query = await prisma.$queryRaw<{ id: number }[]>`
   )
 `;
 
-// Fetch the posts that match the ids from the first query
-const posts = await prisma.post.findMany({
-  where: {
-    id: {
-      in: query.map(({ id }) => id),
-    },
-  },
+    // Fetch the posts that match the ids from the first query
+    const posts = await prisma.post.findMany({
+        where: {
+            id: {
+                in: query.map(({ id }) => id),
+            },
+        },
+    });
+
+    res.json(posts);
+
+
 });
 
-res.json(posts);
 
-
-});
+app.get('/', async (req: any, res: any) => {
+    res.json({ message: "Welcome" })
+})
 
 const port = 3000;
 app.listen(port, () => {
