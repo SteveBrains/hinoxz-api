@@ -4,7 +4,8 @@
   "main": "index.js",
   "scripts": {
     "dev": "tsc -b && nodemon dist/index.js",
-    "compile": "tsc -b"
+    "compile": "tsc -b",
+    "clean": "rm -rf dist"
   },
   "keywords": [],
   "author": "",
