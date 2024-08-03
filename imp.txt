@@ -1,0 +1,5 @@
+CREATE EXTENSION IF NOT EXISTS postgis;
+
+
+URL : http://localhost:3000/locations?latitude=13.195974&longitude=78.745929&radius=1000&page=1&pageSize=20
+

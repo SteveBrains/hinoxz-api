@@ -102,7 +102,7 @@ const postsData =
       "price": "1200000",
       "address": "808 Seaside Road, Miami, FL",
       "latitude": 13.195974,
-      "longitude":78.745988,
+      "longitude": 78.745988,
       "fetchedAddressId": 11
     },
     {
@@ -548,8 +548,8 @@ async function seedUsers() {
 
 }
 async function main() {
-  // await seedLocation()
-  // await seedUsers()
+  await seedLocation()
+  await seedUsers()
   await seedPosts()
 
   await prisma.$disconnect();
