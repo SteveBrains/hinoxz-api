@@ -13,6 +13,13 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id          Int    @id @default(autoincrement())
+  name        String
+  phoneNumber String
+  Posts       Post[]
+}
+
 model Post {
   id               Int       @id @default(autoincrement())
   title            String
@@ -23,6 +30,9 @@ model Post {
   fetchedAddress   Location? @relation(fields: [fetchedAddressId], references: [id])
   latitude         Float
   longitude        Float
+  createdAt        DateTime  @default(now())
+  createdById      Int       @default(1)
+  createdBy        User      @relation(fields: [createdById], references: [id])
 
   @@index([latitude, longitude])
 }
@@ -34,7 +44,7 @@ model Location {
   city      String
   latitude  Float
   longitude Float
-  Post      Post[]
+  Posts     Post[]
 
   @@index([latitude, longitude])
 }
